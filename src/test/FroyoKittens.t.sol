@@ -13,7 +13,7 @@ abstract contract Hevm {
 
 contract User is ERC721Holder {
 
-  uint256 public constant MINT_PRICE = 0.001 ether;
+  uint256 public constant MINT_PRICE = 0.1 ether;
   FroyoKittens demonParty;
   constructor(FroyoKittens _demonParty) {
     demonParty = _demonParty;
