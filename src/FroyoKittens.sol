@@ -14,7 +14,7 @@ contract FroyoKittens is ERC721, Ownable {
   uint256 public constant MAX_SUPPLY = 10000;
   uint256 public constant NFT_PRICE = 0.1 ether;
   uint256 public constant WHITELIST_PRICE = 0.1 ether;
-  bool    public isMintLive;
+  uint256 public mintStartTime;
   bool    public isRevealed;
 
   //---------------------------------------------------------------
@@ -33,15 +33,19 @@ contract FroyoKittens is ERC721, Ownable {
 
   constructor(string memory _baseURI) ERC721("FroyoKittens", "KITTENS") {
     baseURI = _baseURI;
+    // Sunday, 10 April 2022 at 00:00 UTC
+    mintStartTime = 1649563200;
   }
 
+  event Timer(uint256);
   function mint(uint256 amount) public payable {
+    emit Timer(block.timestamp);
     require(msg.value == (amount * NFT_PRICE), "WRONG_ETH_AMOUNT");
     require(owners.length + amount < MAX_SUPPLY, "TOO_MANY_MINTS");
-    require(isMintLive, "NOT_LIVE");
+    require(mintStartTime > 0 && block.timestamp >= mintStartTime, "NOT_LIVE");
 
     minters[msg.sender] += amount;
-    require(minters[msg.sender] <= 3, "ADDRESS_MAX_REACHED");
+    require(minters[msg.sender] < 3, "ADDRESS_MAX_REACHED");
     for(uint256 i = 0; i < amount; i++) {
       _safeMint(msg.sender, owners.length);
     }
@@ -104,22 +108,11 @@ contract FroyoKittens is ERC721, Ownable {
   //  ADMIN FUNCTIONS
   //----------------------------------------------------------------
 
-  function gift(address to, uint256 amount) external onlyOwner {
-    require(owners.length + amount < MAX_SUPPLY, "TOO_MANY_MINTS");
-
-    minters[to] += amount;
-    require(minters[to] < 11, "ADDRESS_MAX_REACHED");
-
-    for(uint256 i = 0; i < amount; i++) {
-      _safeMint(to, owners.length);
-    }
-  }
-
   function setBaseURI(string memory uri) public onlyOwner {
     baseURI = uri;
   }
-  function setIsMintLive(bool _isMintLive) public onlyOwner {
-    isMintLive = _isMintLive;
+  function setMintStartTime(uint256 _startTime) public onlyOwner {
+    mintStartTime = _startTime;
   }
   function setIsRevealed(bool _isRevealed) public onlyOwner {
     isRevealed = _isRevealed;

@@ -14,9 +14,9 @@ abstract contract Hevm {
 contract User is ERC721Holder {
 
   uint256 public constant MINT_PRICE = 0.1 ether;
-  FroyoKittens demonParty;
-  constructor(FroyoKittens _demonParty) {
-    demonParty = _demonParty;
+  FroyoKittens froyoKittens;
+  constructor(FroyoKittens _froyoKittens) {
+    froyoKittens = _froyoKittens;
   }
 
   function mint(uint256 amount) public {
@@ -27,48 +27,45 @@ contract User is ERC721Holder {
     uint256 value = 1 * amount;
     _mint(amount, value);
   }
-  function giftMint(address to, uint256 amount) public {
-    demonParty.gift(to, amount);
-  }
   function premint(address to, uint256 amount, bytes32[] calldata proof) public {
-    demonParty.premint(to, amount, proof);
+    froyoKittens.premint(to, amount, proof);
   }
   function _mint(uint256 amount, uint256 value) internal {
-    demonParty.mint{value: value}(amount);
+    froyoKittens.mint{value: value}(amount);
   }
   function transfer(address to, uint256 tokenId) public {
     transferFor(address(this), to, tokenId);
   }
   function transferFor(address from, address to, uint256 tokenId) public {
-    demonParty.transferFrom(from, to, tokenId);
+    froyoKittens.transferFrom(from, to, tokenId);
   }
   function approve(address to, uint256 tokenId) public {
-    demonParty.approve(to, tokenId);
+    froyoKittens.approve(to, tokenId);
   }
   function approveAll(address to, bool isApproved) public {
-    demonParty.setApprovalForAll(to, isApproved);
+    froyoKittens.setApprovalForAll(to, isApproved);
   }
   function burn(uint256 tokenId) public {
-    demonParty.burn(tokenId);
+    froyoKittens.burn(tokenId);
   }
   function setName(uint256 id, string memory name) public {
-    demonParty.setName(id, name);
+    froyoKittens.setName(id, name);
   }
 
   function setBaseURI(string memory uri) public {
-    demonParty.setBaseURI(uri);
+    froyoKittens.setBaseURI(uri);
   }
-  function setIsMintLive(bool isLive) public {
-    demonParty.setIsMintLive(isLive);
+  function setMintStartTime(uint256 _startTime) public {
+    froyoKittens.setMintStartTime(_startTime);
   }
   function setIsRevealed(bool isRevealed) public {
-    demonParty.setIsRevealed(isRevealed);
+    froyoKittens.setIsRevealed(isRevealed);
   }
 
 
 
   function withdraw() public {
-    // demonParty.withdraw();
+    // froyoKittens.withdraw();
   }
 
   function receivePayment() public payable {}
@@ -79,7 +76,7 @@ contract User is ERC721Holder {
 }
 
 contract FroyoKittensTest is DSTest {
-  FroyoKittens demonParty;
+  FroyoKittens froyoKittens;
   User userA;
   User userB;
   User userC;
@@ -90,14 +87,13 @@ contract FroyoKittensTest is DSTest {
   string constant BASE_URI = "ipfs://QmTK84gc6eCekRagAFduG7S1Ce8HaWs83tFJPQaD728brY";
 
   function setUp() public {
-    demonParty = new FroyoKittens(BASE_URI);
-    demonParty.setIsMintLive(true);
-    userA = new User(demonParty);
-    userB = new User(demonParty);
-    userC = new User(demonParty);
-    userNoFunds = new User(demonParty);
+    froyoKittens = new FroyoKittens(BASE_URI);
+    userA = new User(froyoKittens);
+    userB = new User(froyoKittens);
+    userC = new User(froyoKittens);
+    userNoFunds = new User(froyoKittens);
     hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-    hevm.roll(1000001);
+    hevm.warp(1649563200);
     uint256 eth = 100 ether;
     userA.deposit{value: eth}();
     userB.deposit{value: eth}();
@@ -106,64 +102,58 @@ contract FroyoKittensTest is DSTest {
 
   function testMintOne() public {
     userA.mint(1);
-    uint256 balance = demonParty.balanceOf(address(userA));
+    uint256 balance = froyoKittens.balanceOf(address(userA));
     assertEq(1, balance);
   }
-  function testMintThreeAtOnce() public {
+  function testMintTwoAtOnce() public {
+    userA.mint(2);
+    uint256 balance = froyoKittens.balanceOf(address(userA));
+    assertEq(2, balance);
+  }
+  function testMintTwoSequentially() public {
     userA.mint(1);
-    uint256 balance1 = demonParty.balanceOf(address(userA));
+    uint256 balance1 = froyoKittens.balanceOf(address(userA));
     assertEq(1, balance1);
     userA.mint(1);
-    uint256 balance2 = demonParty.balanceOf(address(userA));
+    uint256 balance2 = froyoKittens.balanceOf(address(userA));
     assertEq(2, balance2);
-    userA.mint(1);
-    uint256 balance3 = demonParty.balanceOf(address(userA));
-    assertEq(3, balance3);
   }
-  function testMintThreeSequentially() public {
+  function testFailMintThree() public {
     userA.mint(3);
-    uint256 balance = demonParty.balanceOf(address(userA));
-    assertEq(3, balance);
-  }
-  function testFailMintFour() public {
-    userA.mint(4);
   }
   function testBurnAdjustsUserBalance() public {
-    userA.mint(3);
+    userA.mint(2);
 
-    uint256 balance1 = demonParty.balanceOf(address(userA));
-    assertEq(balance1, 3);
+    uint256 balance1 = froyoKittens.balanceOf(address(userA));
+    assertEq(balance1, 2);
     userA.burn(0);
 
-    uint256 balance2 = demonParty.balanceOf(address(userA));
-    assertEq(balance2, 2);
+    uint256 balance2 = froyoKittens.balanceOf(address(userA));
+    assertEq(balance2, 1);
   }
 
   function testBurnAdjustsTotalSupply() public {
-    demonParty.gift(address(userA), 10);
-    demonParty.gift(address(userB), 10);
-    demonParty.gift(address(userC), 10);
-    uint256 postMintSupply = demonParty.totalSupply();
-    assertEq(postMintSupply, 30);
+    userA.mint(2);
+    userB.mint(2);
+    userC.mint(2);
+    uint256 postMintSupply = froyoKittens.totalSupply();
+    assertEq(postMintSupply, 6);
 
     userA.burn(0);
-    userA.burn(1);
-    userA.burn(2);
-    userA.burn(3);
-    userA.burn(4);
+    userB.burn(2);
 
-    uint256 postBurnSupply = demonParty.totalSupply();
-    assertEq(postBurnSupply, 25);
+    uint256 postBurnSupply = froyoKittens.totalSupply();
+    assertEq(postBurnSupply, 4);
   }
 
   function testBurnedTokensAreZeroWithNoBurns() public {
-    assertEq(demonParty.burnedTokens(), 0);
-    userA.mint(3);
-    assertEq(demonParty.burnedTokens(), 0);
-    userA.burn(2);
-    assertEq(demonParty.burnedTokens(), 1);
+    assertEq(froyoKittens.burnedTokens(), 0);
+    userA.mint(2);
+    assertEq(froyoKittens.burnedTokens(), 0);
+    userA.burn(1);
+    assertEq(froyoKittens.burnedTokens(), 1);
     userA.burn(0);
-    assertEq(demonParty.burnedTokens(), 2);
+    assertEq(froyoKittens.burnedTokens(), 2);
   }
 
   function testFailBurnWithZeroOwned() public {
@@ -176,47 +166,42 @@ contract FroyoKittensTest is DSTest {
     userA.burn(2);
   }
   function testBurnPreservesOwnership() public {
-    userA.mint(3);
+    userA.mint(2);
     userB.mint(1);
-    assertEq(demonParty.balanceOf(address(userA)), 3);
-    assertEq(demonParty.owners(0), address(userA));
-    assertEq(demonParty.owners(1), address(userA));
-    assertEq(demonParty.owners(2), address(userA));
-    assertEq(demonParty.owners(3), address(userB));
+    assertEq(froyoKittens.balanceOf(address(userA)), 2);
+    assertEq(froyoKittens.owners(0), address(userA));
+    assertEq(froyoKittens.owners(1), address(userA));
+    assertEq(froyoKittens.owners(2), address(userB));
 
     userA.burn(1);
 
-    assertEq(demonParty.balanceOf(address(userA)), 2);
-    assertEq(demonParty.owners(0), address(userA));
-    assertEq(demonParty.owners(1), address(0));
-    assertEq(demonParty.owners(2), address(userA));
-    assertEq(demonParty.owners(3), address(userB));
+    assertEq(froyoKittens.balanceOf(address(userA)), 1);
+    assertEq(froyoKittens.owners(0), address(userA));
+    assertEq(froyoKittens.owners(1), address(0));
+    assertEq(froyoKittens.owners(2), address(userB));
   }
   function testTokenOfOwnerByIndex() public {
-    userA.mint(3);
+    userA.mint(2);
     userB.mint(1);
 
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 0), 0);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 1), 1);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 2), 2);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userB), 0), 3);
+    assertEq(froyoKittens.tokenOfOwnerByIndex(address(userA), 0), 0);
+    assertEq(froyoKittens.tokenOfOwnerByIndex(address(userA), 1), 1);
+    assertEq(froyoKittens.tokenOfOwnerByIndex(address(userB), 0), 2);
   }
   function testBurnAndTokenOfOwnerByIndexPreservesOwnership() public {
-    userA.mint(3);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 0), 0);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 1), 1);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 2), 2);
-    assertEq(demonParty.balanceOf(address(userA)), 3);
+    userA.mint(2);
+    assertEq(froyoKittens.tokenOfOwnerByIndex(address(userA), 0), 0);
+    assertEq(froyoKittens.tokenOfOwnerByIndex(address(userA), 1), 1);
+    assertEq(froyoKittens.balanceOf(address(userA)), 2);
 
     userA.burn(1);
-    assertEq(demonParty.balanceOf(address(userA)), 2);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 0), 0);
-    assertEq(demonParty.tokenOfOwnerByIndex(address(userA), 1), 2);
+    assertEq(froyoKittens.balanceOf(address(userA)), 1);
+    assertEq(froyoKittens.tokenOfOwnerByIndex(address(userA), 0), 0);
   }
 
   function testFailTokenOfOwnerByIndex() public {
-    userA.mint(3);
-    demonParty.tokenOfOwnerByIndex(address(userA), 3);
+    userA.mint(2);
+    froyoKittens.tokenOfOwnerByIndex(address(userA), 2);
   }
 
   function testFailMintWrongAmount() public {
@@ -228,11 +213,11 @@ contract FroyoKittensTest is DSTest {
 
   function testTransferToUserB() public {
     userA.mint(1);
-    assertEq(demonParty.balanceOf(address(userA)), 1);
-    assertEq(demonParty.balanceOf(address(userB)), 0);
+    assertEq(froyoKittens.balanceOf(address(userA)), 1);
+    assertEq(froyoKittens.balanceOf(address(userB)), 0);
     userA.transfer(address(userB), 0);
-    assertEq(demonParty.balanceOf(address(userA)), 0);
-    assertEq(demonParty.balanceOf(address(userB)), 1);
+    assertEq(froyoKittens.balanceOf(address(userA)), 0);
+    assertEq(froyoKittens.balanceOf(address(userB)), 1);
   }
 
   function testFailTransferWithoutApproval() public {
@@ -244,8 +229,8 @@ contract FroyoKittensTest is DSTest {
     userA.mint(1);
     userA.approve(address(userB), 0);
     userB.transferFor(address(userA), address(userC), 0);
-    assertEq(demonParty.balanceOf(address(userA)), 0);
-    assertEq(demonParty.balanceOf(address(userC)), 1);
+    assertEq(froyoKittens.balanceOf(address(userA)), 0);
+    assertEq(froyoKittens.balanceOf(address(userC)), 1);
   }
   function testFailApproveForUnownedToken() public {
     userA.mint(1);
@@ -275,16 +260,16 @@ contract FroyoKittensTest is DSTest {
   }
 
   function testTokenByIndex() public {
-    userA.mint(3);
-    uint256 tokenIndex = demonParty.tokenByIndex(2);
-    assertEq(tokenIndex, 2);
+    userA.mint(2);
+    uint256 tokenIndex = froyoKittens.tokenByIndex(1);
+    assertEq(tokenIndex, 1);
   }
 
   function testSetName() public {
     string memory expected = "MY NAME 1";
     userA.mint(1);
     userA.setName(0, expected);
-    string memory actual = demonParty.tokenNames(0);
+    string memory actual = froyoKittens.tokenNames(0);
     assertEq(actual, expected);
   }
   function testFailSetNameForUnowned() public {
@@ -292,102 +277,57 @@ contract FroyoKittensTest is DSTest {
     userB.setName(0, "");
   }
 
-  function testGiftWorks_NotLive() public {
-    demonParty.setIsMintLive(false);
-    demonParty.gift(address(userC), 1);
-    uint256 balance = demonParty.balanceOf(address(userC));
-    assertEq(balance, 1);
-  }
-  function testGift3Works_NotLive() public {
-    demonParty.setIsMintLive(false);
-    demonParty.gift(address(userC), 3);
-    uint256 balance = demonParty.balanceOf(address(userC));
-    assertEq(balance, 3);
-  }
-  function testGift10_NotLive() public {
-    demonParty.setIsMintLive(false);
-    demonParty.gift(address(userC), 10);
-    uint256 balance = demonParty.balanceOf(address(userC));
-    assertEq(balance, 10);
-  }
-  function testGift3Then7Works_NotLive() public {
-    demonParty.setIsMintLive(false);
-    demonParty.gift(address(userC), 3);
-    uint256 balance = demonParty.balanceOf(address(userC));
-    assertEq(balance, 3);
-
-    demonParty.gift(address(userC), 7);
-    uint256 balance2 = demonParty.balanceOf(address(userC));
-    assertEq(balance2, 10);
-  }
-  function testFailGift11_NotLive() public {
-    demonParty.setIsMintLive(false);
-    demonParty.gift(address(userC), 11);
-  }
-  function testFailGift12_NotLive() public {
-    demonParty.setIsMintLive(false);
-    demonParty.gift(address(userC), 12);
-  }
-  function testFailGift_NonOwner() public {
-    demonParty.setIsMintLive(false);
-    userB.giftMint(address(userA), 1);
-  }
-  function testFailPublicMintAfterMaxGifted() public {
-    demonParty.gift(address(userC), 10);
-    userC.mint(1);
-  }
-  function testFailPublicMintAfter5Gifted() public {
-    demonParty.gift(address(userC), 10);
-    userC.mint(1);
-  }
-  function testPublicMintOneAfter2Gifted() public {
-    demonParty.gift(address(userC), 2);
-    userC.mint(1);
-    uint256 balance = demonParty.balanceOf(address(userC));
-    assertEq(balance, 3);
-  }
-  function testFailPublicMintTooManyAfter2Gifted() public {
-    demonParty.gift(address(userC), 2);
-    userC.mint(2);
-  }
 
   function testBaseUriSetAtDeploy() public {
-    string memory contractUri = demonParty.baseURI();
+    string memory contractUri = froyoKittens.baseURI();
     assertEq(contractUri, BASE_URI);
   }
   function testTokenUriReturnsValueAfterReveal() public {
-    userA.mint(3);
+    userA.mint(2);
 
-    demonParty.setBaseURI("ipfs://BASE/");
-    demonParty.setIsRevealed(true);
-    string memory tokenURI = demonParty.tokenURI(2);
-    assertEq(tokenURI, "ipfs://BASE/2.json");
+    froyoKittens.setBaseURI("ipfs://BASE/");
+    froyoKittens.setIsRevealed(true);
+    string memory tokenURI = froyoKittens.tokenURI(1);
+    assertEq(tokenURI, "ipfs://BASE/1.json");
   }
   function testOwnerCanSetBaseUri() public {
     string memory uri = "ipfs://BASE/";
-    demonParty.setBaseURI(uri);
+    froyoKittens.setBaseURI(uri);
 
-    string memory contractUri = demonParty.baseURI();
+    string memory contractUri = froyoKittens.baseURI();
     assertEq(contractUri, uri);
   }
   function testFailSetBaseUri_NotOwner() public {
     userA.setBaseURI("ipfs://FAIL/");
   }
-  function testOwnerCanSetIsMintLive() public {
-    demonParty.setIsMintLive(true);
-    bool isLive = demonParty.isMintLive();
-    assertTrue(isLive);
+  function testOwnerCanSetIsMintStartTime() public {
+    froyoKittens.setMintStartTime(1);
+    uint256 startBlock = froyoKittens.mintStartTime();
+    assertTrue(startBlock == 1);
   }
-  function testFailSetIsMintLive_NotOwner() public {
-    userA.setIsMintLive(true);
+  function testFailSetIsMintStartTime_NotOwner() public {
+    userA.setMintStartTime(1);
   }
   function testOwnerCanSetIsRevealed() public {
-    demonParty.setIsRevealed(true);
-    bool isRevealed = demonParty.isRevealed();
+    froyoKittens.setIsRevealed(true);
+    bool isRevealed = froyoKittens.isRevealed();
     assertTrue(isRevealed);
   }
   function testFailSetIsRevealed_NotOwner() public {
     userA.setIsRevealed(true);
+  }
+  function testFailMint_GivenStartTimeIsZero() public {
+    froyoKittens.setMintStartTime(0);
+    userA.mint(1);
+  }
+  function testFailMint_GivenStartTimeIsInFuture() public {
+    // 10 Apr midnight + 1 tick
+    froyoKittens.setMintStartTime(1649563201);
+    userA.mint(1);
+  }
+  function testFailMint_GivenHEVMIsWarpedToThePast() public {
+    hevm.warp(160000000);
+    userA.mint(1);
   }
 }
 
