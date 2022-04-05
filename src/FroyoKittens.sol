@@ -55,14 +55,6 @@ contract FroyoKittens is ERC721, Ownable {
     _burn(id);
   }
 
-  /* name functions */
-  mapping(uint256 => string) public tokenNames;
-
-  function setName(uint256 id, string memory name) public {
-    require(msg.sender == owners[id], "NOT_OWNER");
-    tokenNames[id] = name;
-  }
-
   //----------------------------------------------------------------
   //  WHITELISTS
   //----------------------------------------------------------------

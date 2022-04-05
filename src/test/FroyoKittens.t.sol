@@ -48,9 +48,6 @@ contract User is ERC721Holder {
   function burn(uint256 tokenId) public {
     froyoKittens.burn(tokenId);
   }
-  function setName(uint256 id, string memory name) public {
-    froyoKittens.setName(id, name);
-  }
 
   function setBaseURI(string memory uri) public {
     froyoKittens.setBaseURI(uri);
@@ -213,9 +210,11 @@ contract FroyoKittensTest is DSTest {
 
   function testTransferToUserB() public {
     userA.mint(1);
+    assertEq(froyoKittens.owners(0), address(userA));
     assertEq(froyoKittens.balanceOf(address(userA)), 1);
     assertEq(froyoKittens.balanceOf(address(userB)), 0);
     userA.transfer(address(userB), 0);
+    assertEq(froyoKittens.owners(0), address(userB));
     assertEq(froyoKittens.balanceOf(address(userA)), 0);
     assertEq(froyoKittens.balanceOf(address(userB)), 1);
   }
@@ -264,19 +263,6 @@ contract FroyoKittensTest is DSTest {
     uint256 tokenIndex = froyoKittens.tokenByIndex(1);
     assertEq(tokenIndex, 1);
   }
-
-  function testSetName() public {
-    string memory expected = "MY NAME 1";
-    userA.mint(1);
-    userA.setName(0, expected);
-    string memory actual = froyoKittens.tokenNames(0);
-    assertEq(actual, expected);
-  }
-  function testFailSetNameForUnowned() public {
-    userA.mint(1);
-    userB.setName(0, "");
-  }
-
 
   function testBaseUriSetAtDeploy() public {
     string memory contractUri = froyoKittens.baseURI();
