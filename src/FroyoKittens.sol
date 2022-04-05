@@ -74,10 +74,11 @@ contract FroyoKittens is ERC721, Ownable {
     root = merkleroot;
   }
 
-  function premint(address account, uint256 amount, bytes32[] calldata proof)
+  function premint(uint256 amount, bytes32[] calldata proof)
   external
   payable
   {
+    address account = msg.sender;
     require(_verify(_leaf(account), proof), "INVALID_MERKLE_PROOF");
     require(msg.value == (WHITELIST_PRICE), "WRONG_ETH_AMOUNT");
     require(owners.length + amount < MAX_SUPPLY, "TOO_MANY_MINTS");

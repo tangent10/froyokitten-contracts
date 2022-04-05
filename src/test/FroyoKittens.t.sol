@@ -27,8 +27,8 @@ contract User is ERC721Holder {
     uint256 value = 1 * amount;
     _mint(amount, value);
   }
-  function premint(address to, uint256 amount, bytes32[] calldata proof) public {
-    froyoKittens.premint(to, amount, proof);
+  function premint(uint256 amount, bytes32[] calldata proof) public {
+    froyoKittens.premint(amount, proof);
   }
   function _mint(uint256 amount, uint256 value) internal {
     froyoKittens.mint{value: value}(amount);
