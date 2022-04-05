@@ -4,3 +4,6 @@
 .sethrc
 .secrets
 
+# vim
+.*.sw*
+
