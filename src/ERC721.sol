@@ -390,8 +390,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
     address to,
     uint256 tokenId,
     bytes memory _data
-    /* TODO : MAKE PRIVATE */
-  ) public returns (bool) {
+  ) private returns (bool) {
     if (to.isContract()) {
       try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
         return retval == IERC721Receiver.onERC721Received.selector;
