@@ -23,7 +23,8 @@ function run(args) {
         console.log(`missing claimer address`)
         return
       }
-      console.log(merkleTree.getHexProof(keccak256(args[1])))
+      p = merkleTree.getHexProof(keccak256(args[1]))
+      console.log(JSON.stringify(p).replaceAll('"',''))
       break;
     }
 
@@ -54,7 +55,7 @@ function run(args) {
       const address = args[1]
       const proof = merkleTree.getHexProof(keccak256(address))
       console.log(proof)
-      console.log(merkleTree.verify( proof, address, merkleTree.getHexRoot()))
+      console.log(merkleTree.verify(proof, address, merkleTree.getHexRoot()))
       break;
 
     case 'h':
