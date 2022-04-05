@@ -316,12 +316,8 @@ contract FroyoKittensTest is DSTest {
   function testFailSetIsRevealed_NotOwner() public {
     userA.setIsRevealed(true);
   }
-  function testFailMint_GivenStartTimeIsZero() public {
-    froyoKittens.setMintStartTime(0);
-    userA.mint(1);
-  }
   function testFailMint_GivenStartTimeIsInFuture() public {
-    // 10 Apr midnight + 1 tick
+    // 10 Apr 2022 at midnight + 1 tick
     froyoKittens.setMintStartTime(1649563201);
     userA.mint(1);
   }

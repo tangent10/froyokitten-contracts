@@ -37,12 +37,10 @@ contract FroyoKittens is ERC721, Ownable {
     mintStartTime = 1649563200;
   }
 
-  event Timer(uint256);
   function mint(uint256 amount) public payable {
-    emit Timer(block.timestamp);
     require(msg.value == (amount * NFT_PRICE), "WRONG_ETH_AMOUNT");
     require(owners.length + amount < MAX_SUPPLY, "TOO_MANY_MINTS");
-    require(mintStartTime > 0 && block.timestamp >= mintStartTime, "NOT_LIVE");
+    require(block.timestamp >= mintStartTime, "NOT_LIVE");
 
     minters[msg.sender] += amount;
     require(minters[msg.sender] < 3, "ADDRESS_MAX_REACHED");
