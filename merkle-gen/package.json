@@ -1,0 +1,11 @@
+{
+  "name": "merkle-gen",
+  "version": "1.0.0",
+  "main": "bin/index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^5.5.3",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.27"
+  }
+}
