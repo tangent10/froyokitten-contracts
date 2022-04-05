@@ -39,7 +39,7 @@ contract FroyoKittens is ERC721, Ownable {
 
   function mint(uint256 amount) public payable {
     require(msg.value == (amount * NFT_PRICE), "WRONG_ETH_AMOUNT");
-    require(owners.length + amount < MAX_SUPPLY, "TOO_MANY_MINTS");
+    require(owners.length + amount <= MAX_SUPPLY, "MAX_SUPPLY");
     require(block.timestamp >= mintStartTime, "NOT_LIVE");
 
     minters[msg.sender] += amount;
@@ -81,7 +81,7 @@ contract FroyoKittens is ERC721, Ownable {
     address account = msg.sender;
     require(_verify(_leaf(account), proof), "INVALID_MERKLE_PROOF");
     require(msg.value == (amount * WHITELIST_PRICE), "WRONG_ETH_AMOUNT");
-    require(owners.length + amount < MAX_SUPPLY, "TOO_MANY_MINTS");
+    require(owners.length + amount <= MAX_SUPPLY, "MAX_SUPPLY");
 
     minters[msg.sender] += amount;
     require(minters[account] < 3, "ADDRESS_MAX_REACHED");
