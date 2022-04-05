@@ -61,8 +61,8 @@ contract User is ERC721Holder {
 
 
 
-  function withdraw() public {
-    // froyoKittens.withdraw();
+  function withdraw(address to, uint amount) public {
+    froyoKittens.withdraw(to, amount);
   }
 
   function receivePayment() public payable {}
@@ -310,6 +310,23 @@ contract FroyoKittensTest is DSTest {
   function testFailMint_GivenHEVMIsWarpedToThePast() public {
     hevm.warp(160000000);
     userA.mint(1);
+  }
+
+  function testWithdrawFromOwnerSucceeds() public {
+    userA.mint(1);
+    address receiver = address(0x123);
+    uint receiverInitial = receiver.balance;
+    assertEq(0.1 ether, address(froyoKittens).balance);
+    froyoKittens.withdraw(address(receiver), 0.1 ether);
+    assertEq(0 ether, address(froyoKittens).balance);
+    uint receiverFinal = receiver.balance;
+    assertEq(0.1 ether, receiverFinal - receiverInitial);
+  }
+
+  function testFailWithdrawFrom_NotOwner() public {
+    userA.mint(1);
+    address receiver = address(0x123);
+    userA.withdraw(address(receiver), 0.1 ether);
   }
 }
 
