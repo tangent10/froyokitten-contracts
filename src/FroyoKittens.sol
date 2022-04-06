@@ -21,9 +21,14 @@ contract FroyoKittens is ERC721, Ownable {
   //  METADATA
   //---------------------------------------------------------------
   string public baseURI;
+  string public coverURI;
 
   function tokenURI(uint256 id) public view virtual override returns (string memory) {
     require(_exists(id), "ERC721Metadata: URI query for nonexistent token");
+    if(!isRevealed) {
+      return coverURI;
+    }
+
     return string(abi.encodePacked(baseURI, Strings.toString(id), ".json"));
   }
 
@@ -31,8 +36,8 @@ contract FroyoKittens is ERC721, Ownable {
   //  CONSTRUCTOR
   //---------------------------------------------------------------
 
-  constructor(string memory _baseURI) ERC721("FroyoKittens", "KITTENS") {
-    baseURI = _baseURI;
+  constructor(string memory _coverURI) ERC721("FroyoKittens", "FroyoKitten") {
+    coverURI = _coverURI;
     // Sunday, 10 April 2022 at 00:00 UTC
     mintStartTime = 1649563200;
   }
@@ -99,6 +104,9 @@ contract FroyoKittens is ERC721, Ownable {
   //  ADMIN FUNCTIONS
   //----------------------------------------------------------------
 
+  function setCoverURI(string memory uri) public onlyOwner {
+    coverURI = uri;
+  }
   function setBaseURI(string memory uri) public onlyOwner {
     baseURI = uri;
   }

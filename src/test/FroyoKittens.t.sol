@@ -80,11 +80,12 @@ contract FroyoKittensTest is DSTest {
   User userNoFunds;
   Hevm hevm;
 
-  address constant user = address(0xFdeAA01bbac12C37d2F90Fe8B988b76719089E47);
-  string constant BASE_URI = "ipfs://QmTK84gc6eCekRagAFduG7S1Ce8HaWs83tFJPQaD728brY";
+  address constant user      = address(0xFdeAA01bbac12C37d2F90Fe8B988b76719089E47);
+  string  constant BASE_URI  = "ipfs://BASE_URI/";
+  string  constant COVER_URI = "ipfs://COVER_URI";
 
   function setUp() public {
-    froyoKittens = new FroyoKittens(BASE_URI);
+    froyoKittens = new FroyoKittens(COVER_URI);
     userA = new User(froyoKittens);
     userB = new User(froyoKittens);
     userC = new User(froyoKittens);
@@ -264,9 +265,9 @@ contract FroyoKittensTest is DSTest {
     assertEq(tokenIndex, 1);
   }
 
-  function testBaseUriSetAtDeploy() public {
+  function testBaseUriNotSetAtDeploy() public {
     string memory contractUri = froyoKittens.baseURI();
-    assertEq(contractUri, BASE_URI);
+    assertEq(contractUri, "");
   }
   function testTokenUriReturnsValueAfterReveal() public {
     userA.mint(2);
@@ -275,6 +276,19 @@ contract FroyoKittensTest is DSTest {
     froyoKittens.setIsRevealed(true);
     string memory tokenURI = froyoKittens.tokenURI(1);
     assertEq(tokenURI, "ipfs://BASE/1.json");
+  }
+  function testTokenUriReturnsCoverUriBeforeReveal() public {
+    userA.mint(2);
+
+    string memory tokenURI = froyoKittens.tokenURI(1);
+    assertEq(tokenURI,COVER_URI);
+  }
+  function testTokenUriReturnBaseUriAfterReveal() public {
+    userA.mint(2);
+    froyoKittens.setBaseURI(BASE_URI);
+    froyoKittens.setIsRevealed(true);
+    string memory tokenURI = froyoKittens.tokenURI(1);
+    assertEq(tokenURI, "ipfs://BASE_URI/1.json");
   }
   function testOwnerCanSetBaseUri() public {
     string memory uri = "ipfs://BASE/";
